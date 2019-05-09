@@ -8,13 +8,24 @@ public class TravellingSalesman {
     private List<Node> cities;
     private List<Integer> genotype = new ArrayList<Integer>();
     private Scanner scanner = new Scanner(System.in);
+    int[][] matrix;
 
     public TravellingSalesman() {
         cities = new ArrayList<Node>();
     }
 
+    public void setMatrix() {
+        System.out.println("Número de ciudades");
+        int number_of_cities = scanner.nextInt();
+        generateMatrix(number_of_cities);
+    }
+
+    public List<Integer> sart() {
+        return closestNeighbour(matrix);
+    }
+
     private void generateMatrix(int number_of_cities) {
-        int matrix[][] = new int[number_of_cities][number_of_cities];
+        matrix = new int[number_of_cities][number_of_cities];
         for(int i = 0; i < matrix.length; i++) {
             for(int j = 0; j < matrix[i].length; j++) {
                 matrix[i][j] = ((int) (Math.random() * 90));

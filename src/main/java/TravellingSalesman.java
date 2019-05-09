@@ -35,6 +35,7 @@ public class TravellingSalesman {
 
         while(!isAllCitiesVisited() && cities.size() < matrix.length && start_node.getNode_number() != next_node.getNode_number()) {
             next_node.setVisited(true);
+            next_node.setNeighbours(search_neighbours(next_node, matrix));
             cities.add(next_node);
             closest_neighbour_data = getClosestNeighbour(next_node);
             genotype.add(closest_neighbour_data.getWeight());

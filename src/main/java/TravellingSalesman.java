@@ -1,67 +1,112 @@
 import model.Node;
 import model.Tuple;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class TravellingSalesman {
 
     private List<Node> cities;
-    private List<Integer> genotype = new ArrayList<Integer>();
+    private List<Tuple> genotype = new ArrayList<>();
     private Scanner scanner = new Scanner(System.in);
+    int number_of_cities;
     int[][] matrix;
 
     public TravellingSalesman() {
-        cities = new ArrayList<Node>();
+        cities = new ArrayList<>();
     }
 
     public void setMatrix() {
-        System.out.println("Número de ciudades");
-        int number_of_cities = scanner.nextInt();
-        generateMatrix(number_of_cities);
+        System.out.println("¿Desea cargar su propia matriz de adyacencia o prefiere que el programa genere una al azar?\n1 - Sí\n2 - No");
+        int choice = scanner.nextInt();
+        switch (choice) {
+            case 1:
+                try {
+                    Stream<String> stream = Files.lines(Paths.get("matrix.txt"));
+                    generateMatrixFromFile(stream);
+                }catch (Exception e){e.printStackTrace();}
+                break;
+            case 2:
+                System.out.println("Número de ciudades");
+                number_of_cities = scanner.nextInt();
+                generateMatrix(number_of_cities);
+                break;
+        }
     }
 
-    public List<Integer> sart() {
-        return closestNeighbour(matrix);
+    public List<Tuple> sart() {
+        matrixToList();
+        return closestNeighbour();
+    }
+
+    private void generateMatrixFromFile(Stream<String> stream) {
+        matrix = new int[(int) stream.count()][(int) stream.count()];
+        List<Integer> numbers = new ArrayList<>();
+
+        stream.forEach(s -> {
+            String[] s_split = s.split(" ");
+            for(String n : s_split)
+                numbers.add(Integer.parseInt(n));
+        });
+
+        for(int i = 0; i < matrix.length; i++) {
+            for(int j = 0; j < matrix[i].length; j++) {
+                matrix[i][j] = numbers.get(0);
+                numbers.remove(0);
+            }
+        }
     }
 
     private void generateMatrix(int number_of_cities) {
         matrix = new int[number_of_cities][number_of_cities];
         for(int i = 0; i < matrix.length; i++) {
             for(int j = 0; j < matrix[i].length; j++) {
-                matrix[i][j] = ((int) (Math.random() * 90));
+                if(i != j)
+                    matrix[i][j] = ((int) (Math.random() * 50));
+                else matrix[i][j] = 0;
+                matrix[j][i] = matrix[i][j];
             }
         }
     }
 
-    private List<Integer> closestNeighbour(int matrix[][]) {
-        genotype.clear();
-        int start_point = ((int) Math.random() * matrix.length);
-        Node start_node = new Node(start_point);
-        start_node.setVisited(true);
-        start_node.setNeighbours(search_neighbours(start_node, matrix));
-        cities.add(start_node);
-        Tuple closest_neighbour_data = getClosestNeighbour(start_node);
-        genotype.add(closest_neighbour_data.getWeight());
-        Node next_node = new Node(closest_neighbour_data.getNode_number());
+    private void matrixToList() {
+        cities = new ArrayList<>();
+        for(int i = 0; i < matrix.length; i ++)
+            cities.add(new Node(i));
+        for (Node node : cities)
+            System.out.println(node.getNode_number());
+    }
 
-        while(!isAllCitiesVisited() && cities.size() < matrix.length && start_node.getNode_number() != next_node.getNode_number()) {
-            next_node.setVisited(true);
-            next_node.setNeighbours(search_neighbours(next_node, matrix));
-            cities.add(next_node);
+    private List<Tuple> closestNeighbour() {
+        genotype.clear();
+        Tuple closest_neighbour_data;
+        Random random = new Random();
+        int start_point = random.nextInt(number_of_cities);
+        Node start_node = cities.get(start_point);
+        cities.get(start_point).setVisited(true);
+        findNeighbors(start_node);
+        closest_neighbour_data = getClosestNeighbour(start_node);
+        genotype.add(closest_neighbour_data);
+
+        while(!isAllCitiesVisited()) {
+            Node next_node = cities.get(closest_neighbour_data.getNode_number());
+            cities.get(next_node.getNode_number()).setVisited(true);
+            findNeighbors(next_node);
             closest_neighbour_data = getClosestNeighbour(next_node);
-            genotype.add(closest_neighbour_data.getWeight());
-            next_node = new Node(closest_neighbour_data.getNode_number());
+            genotype.add(closest_neighbour_data);
         }
         return genotype;
     }
 
-    private List<Tuple> search_neighbours(Node start_node, int matrix[][]) {
-        List<Tuple> neighbours = new ArrayList<Tuple>();
+    private void findNeighbors(Node start_node) {
+        List<Tuple> neighbours = new ArrayList<>();
         for(int i = 0; i < matrix[start_node.getNode_number()].length; i++) {
-            if(matrix[start_node.getNode_number()][i] != 0 && !start_node.isVisited())
+            if(matrix[start_node.getNode_number()][i] != 0 && !cities.get(i).isVisited())
                 neighbours.add(new Tuple(i, matrix[start_node.getNode_number()][i]));
         }
-        return neighbours;
+        start_node.setNeighbours(neighbours);
     }
 
     private Tuple getClosestNeighbour(Node node) {
@@ -69,9 +114,9 @@ public class TravellingSalesman {
     }
 
     private boolean isAllCitiesVisited() {
-        boolean all_visited = false;
-        for(Node node : cities)
-            all_visited = (node.isVisited() ? true : false);
-        return all_visited;
+        boolean visited = false;
+        for (Node node : cities)
+            visited = (node.isVisited() ? true : false);
+        return visited;
     }
 }

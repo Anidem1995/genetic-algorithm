@@ -8,6 +8,10 @@ public class Chromosome {
 
     public Chromosome() { }
 
+    public Chromosome(List<Integer> genotype) {
+        this.genotype = genotype;
+    }
+
     public List<Integer> getGenotype() {
         return genotype;
     }
